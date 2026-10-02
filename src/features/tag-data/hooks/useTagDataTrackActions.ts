@@ -8,6 +8,7 @@ import {
   TrackData,
 } from "@/types/tagData";
 import { buildValidTagIdSet } from "@/utils/tagTaxonomy";
+import { mergeTrackNames, TrackNames } from "@/utils/trackNames";
 import { applyBatchTagUpdatesToData } from "../utils/tagData.batchUpdates";
 import { dispatchTagDataUpdatedEvent } from "../utils/tagData.events";
 import {
@@ -234,6 +235,22 @@ export function useTagDataTrackActions({
     [commitDataSnapshot, latestTagDataRef, onSyncMultipleTracks],
   );
 
+  /** Fill in names/artists for tracks saved without them; other fields untouched. */
+  const applyTrackNames = useCallback(
+    (names: TrackNames) => {
+      setTagData((currentData) => {
+        const { tracks, changed } = mergeTrackNames(currentData.tracks, names);
+        if (changed.length === 0) {
+          return currentData;
+        }
+        const nextData = { ...currentData, tracks };
+        latestTagDataRef.current = nextData;
+        return nextData;
+      });
+    },
+    [latestTagDataRef, setTagData],
+  );
+
   const setBpm = useCallback(
     async (trackUri: string, bpm: number | null) => {
       if (!latestTagDataRef.current.tracks[trackUri]) {
@@ -436,6 +453,7 @@ export function useTagDataTrackActions({
     replaceTaxonomy,
     applyBatchTagUpdates,
     applyTrackDataUpdates,
+    applyTrackNames,
     setBpm,
     setCamelotKey,
     updateBpm,

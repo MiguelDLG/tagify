@@ -40,7 +40,7 @@ import {
 } from "@/features/discovery-survey";
 import { PowerUserModal, usePowerUserModal } from "@/features/power-user";
 import { useGlobalKeyboardShortcuts } from "./hooks/shared/useGlobalKeyboardShortcuts";
-import { useMetadataBackfill } from "@/features/metadata-backfill";
+import { useMetadataBackfill, useTrackNameFill } from "@/features/metadata-backfill";
 import { graphqlRateLimiter } from "./utils/RateLimiter";
 import { audioFeaturesRateLimiter } from "./services/AudioFeaturesService";
 import { spotifyApiService } from "./services/SpotifyApiService";
@@ -138,6 +138,7 @@ function App() {
     updateBpm,
     applyBatchTagUpdates,
     applyTrackDataUpdates,
+    applyTrackNames,
     findTagName,
     toggleTagPlaylist,
     setPlaylistRating,
@@ -161,6 +162,12 @@ function App() {
   useEffect(() => {
     tagDataRef.current = tagData;
   }, [tagData]);
+
+  useTrackNameFill({
+    tracks: tagData.tracks,
+    enabled: !isLoading && !migrationProgress,
+    applyNames: applyTrackNames,
+  });
 
   useMetadataBackfill({
     enabled: !isLoading && !migrationProgress, // Only run after loading/migration complete

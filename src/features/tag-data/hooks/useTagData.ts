@@ -93,6 +93,7 @@ export function useTagData(options: UseTagDataOptions = {}) {
     updateBpm,
     applyBatchTagUpdates,
     applyTrackDataUpdates,
+    applyTrackNames,
     replaceTaxonomy,
     findTagName,
   } = useTagDataTrackActions({
@@ -360,6 +361,7 @@ export function useTagData(options: UseTagDataOptions = {}) {
     updateBpm,
     applyBatchTagUpdates,
     applyTrackDataUpdates,
+    applyTrackNames,
     findTagName,
     toggleTagPlaylist,
     setPlaylistRating,

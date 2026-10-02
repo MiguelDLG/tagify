@@ -4,6 +4,7 @@ import { smartPlaylistSyncService } from "../services/SmartPlaylistSyncService";
 import { welcomeModal } from "./WelcomeModal";
 import { openAiPanel, OPEN_AI_EVENT } from "../features/ai";
 import { repairSpicetifyMenuItem } from "../utils/spicetifyMenuCompat";
+import { fetchTrackNames, needsTrackName } from "../utils/trackNames";
 import {
   addRecentTag,
   createUpdatedTrack,
@@ -768,7 +769,77 @@ import { getInlineEditScope } from "./inlineEditor.selection";
         );
       });
 
+      void this.fillMissingTrackNames(
+        Object.keys(nextTracks).filter((trackUri) =>
+          needsTrackName(trackUri, nextTracks[trackUri]),
+        ),
+      );
+
       return nextTracks;
+    },
+
+    /**
+     * New tracks from the inline editor only carry tags; look up their name and
+     * artists afterwards so Tagify doesn't list them as "Unknown Track".
+     */
+    async fillMissingTrackNames(trackUris) {
+      if (trackUris.length === 0) return;
+      try {
+        const names = await fetchTrackNames(trackUris);
+        const namedUris = Object.keys(names);
+        if (namedUris.length === 0) return;
+
+        const updated = await new Promise((resolve, reject) => {
+          const request = indexedDB.open("tagify-db");
+          request.onerror = () => reject(new Error("Unable to open Tagify storage"));
+          request.onsuccess = (event) => {
+            const db = event.target.result;
+            const transaction = db.transaction("tracks", "readwrite");
+            const trackStore = transaction.objectStore("tracks");
+            const saved = {};
+            namedUris.forEach((trackUri) => {
+              const getRequest = trackStore.get(trackUri);
+              getRequest.onsuccess = () => {
+                const record = getRequest.result;
+                if (!record || (record.name && record.artists)) return;
+                const next = {
+                  ...record,
+                  name: record.name || names[trackUri].name,
+                  artists: record.artists || names[trackUri].artists,
+                };
+                trackStore.put(next);
+                saved[trackUri] = next;
+              };
+            });
+            transaction.oncomplete = () => {
+              db.close();
+              resolve(saved);
+            };
+            transaction.onerror = () => {
+              db.close();
+              reject(new Error("Unable to save Tagify track names"));
+            };
+          };
+        });
+
+        const updatedUris = Object.keys(updated);
+        if (updatedUris.length === 0) return;
+        updatedUris.forEach((trackUri) => {
+          const trackData = { ...updated[trackUri] };
+          delete trackData.uri;
+          state.taggedTracks[trackUri] = this.normalizeTrackForExtension(
+            trackData,
+            state.tagLookup,
+          );
+        });
+        window.dispatchEvent(
+          new CustomEvent(DATA_UPDATED_EVENT, {
+            detail: { type: "names", trackUris: updatedUris },
+          }),
+        );
+      } catch (error) {
+        console.warn("Tagify: could not fill in track names", error);
+      }
     },
 
     /**
