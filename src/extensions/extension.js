@@ -3,6 +3,7 @@ import { keyboardShortcutService } from "../services/KeyboardShortcutService";
 import { smartPlaylistSyncService } from "../services/SmartPlaylistSyncService";
 import { welcomeModal } from "./WelcomeModal";
 import { openAiPanel, OPEN_AI_EVENT } from "../features/ai";
+import { repairSpicetifyMenuItem } from "../utils/spicetifyMenuCompat";
 import {
   addRecentTag,
   createUpdatedTrack,
@@ -4065,6 +4066,11 @@ import { getInlineEditScope } from "./inlineEditor.selection";
     settingsUtils.subscribe();
 
     // Initialize features
+    repairSpicetifyMenuItem()
+      .then((result) => {
+        if (result !== "ok") console.log(`Tagify: context menu component check: ${result}`);
+      })
+      .catch((error) => console.warn("Tagify: context menu component check failed", error));
     contextMenuItem.initialize();
     aiFeature.initialize();
     tracklistEnhancer.initialize();
