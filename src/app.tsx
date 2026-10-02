@@ -33,6 +33,7 @@ import { trackService } from "./services/TrackService";
 import { UpdateBanner, useUpdateChecker } from "@/features/update-check";
 import { MultiTrackDetails, useMultiTrackTagging } from "@/features/multi-track-tagging";
 import { useSmartPlaylists } from "@/features/smart-playlists";
+import { DuplicateBanner, DuplicatesModal } from "@/features/duplicates";
 import {
   DiscoverySurveyModal,
   useDiscoverySurvey,
@@ -88,6 +89,7 @@ function App() {
   const [selectedTagManagerSubcategoryId, setSelectedTagManagerSubcategoryId] =
     useState<string | null | undefined>(undefined);
   const [showExport, setShowExport] = useState<boolean>(false);
+  const [showDuplicates, setShowDuplicates] = useState<boolean>(false);
   const [showMigrationModal, setShowMigrationModal] = useState(false);
   const [activeView, setActiveView] = useState<AppView>(getStoredActiveView);
   const [activePlaylistUri, setActivePlaylistUri] = useState<string | null>(null);
@@ -135,6 +137,7 @@ function App() {
     setCamelotKey,
     updateBpm,
     applyBatchTagUpdates,
+    applyTrackDataUpdates,
     findTagName,
     toggleTagPlaylist,
     setPlaylistRating,
@@ -1125,8 +1128,17 @@ function App() {
         onExportRekordbox={() => setShowExport(true)}
         onResetTagifyData={handleResetTagifyState}
         onRetryMigration={retryMigration}
+        onOpenDuplicates={() => setShowDuplicates(true)}
         lastSaved={lastSaved}
       />
+
+      {showDuplicates && (
+        <DuplicatesModal
+          tracks={tagData.tracks}
+          applyTrackDataUpdates={applyTrackDataUpdates}
+          onClose={() => setShowDuplicates(false)}
+        />
+      )}
 
       {isLoading ? (
         <div className={styles.loadingContainer}>
@@ -1168,6 +1180,14 @@ function App() {
               ) : (
                 activeTrack &&
                 isDisplayedTrackMusic && (
+                  <>
+                  <DuplicateBanner
+                    trackUri={activeTrack.uri}
+                    trackName={activeTrackMetadata?.name}
+                    trackArtists={activeTrackMetadata?.artists}
+                    tracks={tagData.tracks}
+                    applyTrackDataUpdates={applyTrackDataUpdates}
+                  />
                   <TrackDetails
                     displayedTrack={activeTrack}
                     currentlyPlayingTrack={currentlyPlayingTrack}
@@ -1187,6 +1207,7 @@ function App() {
                     onSwitchToCurrentTrack={setLockedTrack}
                     onUpdateBpm={updateBpm}
                   />
+                  </>
                 )
               )}
 

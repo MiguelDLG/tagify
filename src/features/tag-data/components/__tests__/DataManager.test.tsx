@@ -39,6 +39,7 @@ describe("DataManager", () => {
         onExportRekordbox={vi.fn()}
         onResetTagifyData={vi.fn().mockResolvedValue(undefined)}
         onRetryMigration={vi.fn()}
+        onOpenDuplicates={vi.fn()}
         lastSaved={null}
       />,
     );
@@ -72,6 +73,7 @@ describe("DataManager", () => {
         onExportRekordbox={vi.fn()}
         onResetTagifyData={vi.fn().mockResolvedValue(undefined)}
         onRetryMigration={vi.fn()}
+        onOpenDuplicates={vi.fn()}
         lastSaved={null}
       />,
     );
@@ -106,6 +108,7 @@ describe("DataManager", () => {
         onExportRekordbox={vi.fn()}
         onResetTagifyData={vi.fn().mockResolvedValue(undefined)}
         onRetryMigration={vi.fn()}
+        onOpenDuplicates={vi.fn()}
         lastSaved={null}
       />,
     );

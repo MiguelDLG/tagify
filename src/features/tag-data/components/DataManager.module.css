@@ -51,6 +51,10 @@
   background: rgb(138 43 226 / 30%);
 }
 
+.pillButton.duplicatesButton:hover {
+  background: rgb(185 140 255 / 30%);
+}
+
 .pillButton.infoButton:hover {
   background: rgb(255 193 7 / 30%);
 }

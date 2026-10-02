@@ -92,6 +92,7 @@ export function useTagData(options: UseTagDataOptions = {}) {
     setCamelotKey,
     updateBpm,
     applyBatchTagUpdates,
+    applyTrackDataUpdates,
     replaceTaxonomy,
     findTagName,
   } = useTagDataTrackActions({
@@ -349,6 +350,7 @@ export function useTagData(options: UseTagDataOptions = {}) {
     setCamelotKey,
     updateBpm,
     applyBatchTagUpdates,
+    applyTrackDataUpdates,
     findTagName,
     toggleTagPlaylist,
     setPlaylistRating,

@@ -7,6 +7,7 @@ import {
 } from "@/features/smart-playlists/utils/smartPlaylist.storage";
 import {
   showCleanupDeletedSmartPlaylistsNotification,
+  showDuplicateSkippedNotification,
   showDeduplicationRestoreErrorNotification,
   showDeduplicationTrackLossNotification,
   showSmartPlaylistSyncErrorNotification,
@@ -28,6 +29,12 @@ import {
   UseSmartPlaylistProps,
 } from "@/features/smart-playlists/model/useSmartPlaylists.types";
 import { TrackData } from "@/types/tagData";
+import { trackIdentityService } from "@/services/TrackIdentityService";
+import {
+  dedupeTrackUris,
+  loadIgnoredKeys,
+  resolveDuplicateBeforeAdd,
+} from "@/features/duplicates";
 
 interface UseSmartPlaylistActionsOptions {
   tagDataRef: UseSmartPlaylistProps["tagDataRef"];
@@ -149,6 +156,27 @@ export function useSmartPlaylistActions({
               );
 
               if (matches && !isCurrentlyTracked) {
+                const decision = await resolveDuplicateBeforeAdd(
+                  trackUri,
+                  trackData,
+                  trackUris,
+                );
+                if (decision.skip) {
+                  showDuplicateSkippedNotification(trackData.name, playlist.playlistName);
+                  continue;
+                }
+                for (const versionUri of decision.remove) {
+                  if (
+                    await spotifyApiService.removeTrackFromPlaylist(
+                      versionUri,
+                      playlist.playlistId,
+                    )
+                  ) {
+                    trackUris = trackUris.filter((uri) => uri !== versionUri);
+                    hasChanges = true;
+                  }
+                }
+
                 const result = await spotifyApiService.addTrackToSpotifyPlaylist(
                   trackUri,
                   playlist.playlistId,
@@ -287,10 +315,39 @@ export function useSmartPlaylistActions({
           return;
         }
 
-        const matchingTrackUris = collectMatchingTrackUris(
+        const allMatchingTrackUris = collectMatchingTrackUris(
           tagDataRef.current.tracks,
           playlist.criteria,
         );
+
+        // Only one version of each song (single/album/deluxe/clean) goes in.
+        let matchingTrackUris = allMatchingTrackUris;
+        try {
+          const tracks = tagDataRef.current.tracks;
+          const identities = await trackIdentityService.getIdentities(
+            allMatchingTrackUris,
+            Object.fromEntries(
+              allMatchingTrackUris.map((uri) => [
+                uri,
+                { name: tracks[uri]?.name, artists: tracks[uri]?.artists },
+              ]),
+            ),
+          );
+          const deduped = dedupeTrackUris(
+            allMatchingTrackUris,
+            identities,
+            tracks,
+            loadIgnoredKeys(),
+          );
+          matchingTrackUris = deduped.uris;
+          if (deduped.dropped.length > 0) {
+            console.log(
+              `Skipping ${deduped.dropped.length} duplicate versions in ${playlist.playlistName}`,
+            );
+          }
+        } catch (error) {
+          console.warn("Duplicate check during sync failed; syncing all matches", error);
+        }
 
         const { tracksToAdd, tracksToRemove } = calculatePlaylistTrackDelta(
           currentTrackUrisInPlaylist,

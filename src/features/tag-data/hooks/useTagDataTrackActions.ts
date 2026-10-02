@@ -206,6 +206,34 @@ export function useTagDataTrackActions({
     [latestTagDataRef, onSyncMultipleTracks, setTagData],
   );
 
+  /** Replace or delete several tracks at once (e.g. merging duplicate versions). */
+  const applyTrackDataUpdates = useCallback(
+    (updates: Record<string, TrackData | null>) => {
+      const entries = Object.entries(updates);
+      if (entries.length === 0) {
+        return;
+      }
+
+      const currentData = latestTagDataRef.current;
+      const nextTracks = { ...currentData.tracks };
+      for (const [trackUri, trackData] of entries) {
+        if (trackData) {
+          nextTracks[trackUri] = trackData;
+        } else {
+          delete nextTracks[trackUri];
+        }
+      }
+
+      commitDataSnapshot({ ...currentData, tracks: nextTracks });
+      dispatchTagDataUpdatedEvent("batchUpdate");
+
+      setTimeout(() => {
+        onSyncMultipleTracks?.(updates);
+      }, TRACK_SYNC_DELAY_MS);
+    },
+    [commitDataSnapshot, latestTagDataRef, onSyncMultipleTracks],
+  );
+
   const setBpm = useCallback(
     async (trackUri: string, bpm: number | null) => {
       if (!latestTagDataRef.current.tracks[trackUri]) {
@@ -407,6 +435,7 @@ export function useTagDataTrackActions({
   return {
     replaceTaxonomy,
     applyBatchTagUpdates,
+    applyTrackDataUpdates,
     setBpm,
     setCamelotKey,
     updateBpm,

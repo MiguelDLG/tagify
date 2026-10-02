@@ -10,6 +10,7 @@ import { Settings } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartSimple,
+  faClone,
   faCoffee,
   faDownload,
   faInfo,
@@ -26,6 +27,7 @@ interface DataManagerProps {
   onExportRekordbox: () => void;
   onResetTagifyData: () => Promise<void>;
   onRetryMigration: () => Promise<OrchestratorResult>;
+  onOpenDuplicates: () => void;
   lastSaved: Date | null;
 }
 
@@ -39,6 +41,7 @@ const DataManager: React.FC<DataManagerProps> = ({
   onExportRekordbox,
   onResetTagifyData,
   onRetryMigration,
+  onOpenDuplicates,
   lastSaved,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,6 +144,13 @@ const DataManager: React.FC<DataManagerProps> = ({
           title="View your tag stats"
         >
           <FontAwesomeIcon icon={faChartSimple} />
+        </button>
+        <button
+          className={`${styles.pillButton} ${styles.duplicatesButton}`}
+          onClick={onOpenDuplicates}
+          title="Find duplicate songs (same song from a single, album, deluxe or clean release)"
+        >
+          <FontAwesomeIcon icon={faClone} />
         </button>
         <button
           className={`${styles.pillButton} ${styles.infoButton}`}

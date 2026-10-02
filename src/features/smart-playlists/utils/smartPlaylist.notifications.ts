@@ -85,3 +85,12 @@ export function showDeduplicationRestoreErrorNotification(): void {
     5000,
   );
 }
+
+export function showDuplicateSkippedNotification(
+  trackName: string | undefined,
+  playlistName: string,
+): void {
+  Spicetify.showNotification(
+    `${trackName ? `"${trackName}"` : "Track"} not added to ${playlistName}: another version is already there`,
+  );
+}
