@@ -89,6 +89,9 @@ function normalizeTrackData(trackData: unknown): TrackData {
     ...(typeof candidate.artists === "string"
       ? { artists: candidate.artists }
       : {}),
+    ...(typeof candidate.albumName === "string"
+      ? { albumName: candidate.albumName }
+      : {}),
     ...(typeof candidate.backfillAttempts === "number"
       ? { backfillAttempts: candidate.backfillAttempts }
       : {}),

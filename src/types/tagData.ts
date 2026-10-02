@@ -89,6 +89,7 @@ export interface TrackData {
   dateModified?: number;
   name?: string;
   artists?: string;
+  albumName?: string;
   backfillAttempts?: number;
 }
 

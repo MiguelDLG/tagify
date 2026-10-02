@@ -22,6 +22,7 @@ export function areTrackDataEqual(
     currentTrack.dateModified !== incomingTrack.dateModified ||
     currentTrack.name !== incomingTrack.name ||
     currentTrack.artists !== incomingTrack.artists ||
+    currentTrack.albumName !== incomingTrack.albumName ||
     currentTrack.backfillAttempts !== incomingTrack.backfillAttempts ||
     currentTrack.tagIds.length !== incomingTrack.tagIds.length
   ) {

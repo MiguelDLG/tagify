@@ -92,6 +92,7 @@ export function buildTrackInfoMap(
       infoMap[uri] = {
         name: trackData.name,
         artists: trackData.artists,
+        albumName: trackData.albumName,
       };
       return;
     }
@@ -99,6 +100,7 @@ export function buildTrackInfoMap(
     infoMap[uri] = {
       name: "Unknown Track",
       artists: "Unknown Artist",
+      albumName: trackData?.albumName,
     };
   });
 
@@ -261,7 +263,8 @@ export function filterTrackEntries(
     const matchesSearch =
       searchTerm === "" ||
       info.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      info.artists.toLowerCase().includes(searchTerm.toLowerCase());
+      info.artists.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      !!info.albumName?.toLowerCase().includes(searchTerm.toLowerCase());
 
     return (
       matchesSearch &&

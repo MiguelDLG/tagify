@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterTrackEntries } from "@/features/track-session/utils/trackList.logic";
+import { buildTrackInfoMap, filterTrackEntries } from "@/features/track-session/utils/trackList.logic";
 import type {
   TrackListEntry,
   TrackListFilterInputs,
@@ -72,6 +72,21 @@ function createFilterInputs(overrides: Partial<TrackListFilterInputs> = {}) {
 }
 
 describe("filterTrackEntries", () => {
+  it("searches album names as well as titles and artists", () => {
+    const entries: TrackListEntry[] = [
+      ["spotify:track:a", { rating: 0, energy: 0, bpm: null, tagIds: ["tag_rap"], name: "Nokia", artists: "Drake", albumName: "$ome $exy $ongs 4 U" }],
+      ["spotify:track:b", { rating: 0, energy: 0, bpm: null, tagIds: ["tag_rap"], name: "Other", artists: "Someone" }],
+    ];
+    const info = buildTrackInfoMap(entries);
+    const search = (searchTerm: string) =>
+      filterTrackEntries(entries, info, createFilterInputs({ searchTerm })).map(([uri]) => uri);
+
+    expect(search("sexy")).toEqual([]);
+    expect(search("$ONGS")).toEqual(["spotify:track:a"]);
+    expect(search("nokia")).toEqual(["spotify:track:a"]);
+    expect(search("someone")).toEqual(["spotify:track:b"]);
+  });
+
   it("returns all tracks when filters are empty", () => {
     expect(
       filterTrackEntries(trackEntries, trackInfo, createFilterInputs()),

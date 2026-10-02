@@ -4,7 +4,7 @@ import { smartPlaylistSyncService } from "../services/SmartPlaylistSyncService";
 import { welcomeModal } from "./WelcomeModal";
 import { openAiPanel, OPEN_AI_EVENT } from "../features/ai";
 import { repairSpicetifyMenuItem } from "../utils/spicetifyMenuCompat";
-import { fetchTrackNames, needsTrackName } from "../utils/trackNames";
+import { fetchTrackNames, needsTrackDetails } from "../utils/trackNames";
 import {
   addRecentTag,
   createUpdatedTrack,
@@ -771,7 +771,7 @@ import { getInlineEditScope } from "./inlineEditor.selection";
 
       void this.fillMissingTrackNames(
         Object.keys(nextTracks).filter((trackUri) =>
-          needsTrackName(trackUri, nextTracks[trackUri]),
+          needsTrackDetails(trackUri, nextTracks[trackUri]),
         ),
       );
 
@@ -779,8 +779,8 @@ import { getInlineEditScope } from "./inlineEditor.selection";
     },
 
     /**
-     * New tracks from the inline editor only carry tags; look up their name and
-     * artists afterwards so Tagify doesn't list them as "Unknown Track".
+     * New tracks from the inline editor only carry tags; look up their name,
+     * artists and album afterwards so Tagify doesn't list them as "Unknown Track".
      */
     async fillMissingTrackNames(trackUris) {
       if (trackUris.length === 0) return;
@@ -801,12 +801,21 @@ import { getInlineEditScope } from "./inlineEditor.selection";
               const getRequest = trackStore.get(trackUri);
               getRequest.onsuccess = () => {
                 const record = getRequest.result;
-                if (!record || (record.name && record.artists)) return;
+                const info = names[trackUri];
+                if (!record) return;
                 const next = {
                   ...record,
-                  name: record.name || names[trackUri].name,
-                  artists: record.artists || names[trackUri].artists,
+                  name: record.name || info.name,
+                  artists: record.artists || info.artists,
+                  albumName: record.albumName || info.albumName,
                 };
+                if (
+                  next.name === record.name &&
+                  next.artists === record.artists &&
+                  next.albumName === record.albumName
+                ) {
+                  return;
+                }
                 trackStore.put(next);
                 saved[trackUri] = next;
               };

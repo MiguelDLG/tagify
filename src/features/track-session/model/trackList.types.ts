@@ -16,11 +16,13 @@ export interface TrackListTrackData {
   dateModified?: number;
   name?: string;
   artists?: string;
+  albumName?: string;
 }
 
 export interface TrackListTrackInfo {
   name: string;
   artists: string;
+  albumName?: string;
 }
 
 export interface ResolvedTag {

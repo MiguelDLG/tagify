@@ -779,7 +779,7 @@ const TrackList: React.FC<TrackListProps> = ({
           <div className={styles.searchBox}>
             <input
               type="text"
-              placeholder="Search tracks..."
+              placeholder="Search tracks, artists, albums..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={styles.searchInput}
