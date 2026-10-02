@@ -15,11 +15,13 @@ import {
   faDownload,
   faInfo,
   faLightbulb,
+  faWandMagicSparkles,
   faShieldHalved,
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 import { faDiscord } from "@fortawesome/free-brands-svg-icons";
 import { useLocalStorage } from "@/hooks/shared/useLocalStorage";
+import { OPEN_AI_EVENT } from "@/features/ai/ai.events";
 
 interface DataManagerProps {
   onExportTagData: () => Promise<void>;
@@ -144,6 +146,17 @@ const DataManager: React.FC<DataManagerProps> = ({
           title="View your tag stats"
         >
           <FontAwesomeIcon icon={faChartSimple} />
+        </button>
+        <button
+          className={`${styles.pillButton} ${styles.aiButton}`}
+          onClick={() =>
+            window.dispatchEvent(
+              new CustomEvent(OPEN_AI_EVENT, { detail: { kind: "general", uris: [] } }),
+            )
+          }
+          title="Tagify AI: describe tag changes in plain language"
+        >
+          <FontAwesomeIcon icon={faWandMagicSparkles} /> AI
         </button>
         <button
           className={`${styles.pillButton} ${styles.duplicatesButton}`}

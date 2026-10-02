@@ -324,6 +324,15 @@ export function useTagData(options: UseTagDataOptions = {}) {
     loadTagData();
   }, [loadTagData]);
 
+  // Taxonomy edited outside this view (Tagify AI creating or removing tags).
+  useEffect(() => {
+    const reload = () => {
+      loadTagData();
+    };
+    window.addEventListener("tagify:taxonomyChanged", reload);
+    return () => window.removeEventListener("tagify:taxonomyChanged", reload);
+  }, [loadTagData]);
+
   useEffect(() => {
     latestTagDataRef.current = tagData;
   }, [tagData]);

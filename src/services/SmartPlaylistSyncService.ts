@@ -10,6 +10,15 @@ import {
 } from "@/features/smart-playlists/utils/smartPlaylist.storage";
 
 class SmartPlaylistSyncService {
+  /** Syncs run one at a time; concurrent runs lose each other's playlist track lists. */
+  private queue: Promise<void> = Promise.resolve();
+
+  syncTrack(trackUri: string, trackData: TrackData | null): Promise<void> {
+    const run = this.queue.then(() => this.syncTrackNow(trackUri, trackData));
+    this.queue = run.catch(() => undefined);
+    return run;
+  }
+
   private getSmartPlaylists(): SmartPlaylistCriteria[] {
     return loadSmartPlaylistsFromStorage();
   }
@@ -18,7 +27,7 @@ class SmartPlaylistSyncService {
     saveSmartPlaylistsToStorage(playlists);
   }
 
-  async syncTrack(
+  private async syncTrackNow(
     trackUri: string,
     trackData: TrackData | null
   ): Promise<void> {

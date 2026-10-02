@@ -9,6 +9,8 @@ export interface TrackIdentity {
   explicit: boolean | null;
   isrc: string | null;
   albumName: string | null;
+  /** spotify:album:… when known (older cache entries may lack it). */
+  albumUri?: string | null;
   albumKind: AlbumKind;
   /** Spotify's canonical URI when the track is relinked to another release. */
   canonicalUri: string | null;

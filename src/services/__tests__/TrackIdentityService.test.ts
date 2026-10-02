@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import protobuf from "protobufjs/light";
 import {
   decodeTrackIdentities,
+  gidToBase62,
   identityFromGraphQL,
   identityFromTagData,
 } from "../TrackIdentityService";
@@ -138,6 +139,7 @@ describe("decodeTrackIdentities", () => {
       explicit: true,
       isrc: "USUM72401234",
       albumName: "Demons Protected By Angels (Bonus Version)",
+      albumUri: null,
       albumKind: "album",
       canonicalUri: "spotify:track:standard",
       releaseYear: 2024,
@@ -146,6 +148,19 @@ describe("decodeTrackIdentities", () => {
     });
     const s = result.get("spotify:track:single")!;
     expect([s.albumKind, s.explicit, s.isrc, s.artists]).toEqual(["single", false, null, ["Internet Money", "Gunna"]]);
+  });
+});
+
+describe("gidToBase62", () => {
+  it("encodes 16 bytes as 22 base62 chars and round-trips", () => {
+    const hex = "d7b0c7c1f53646e3b3b2d4c0d2a0f9a5";
+    const bytes = new Uint8Array(hex.match(/../g)!.map((h) => parseInt(h, 16)));
+    const id = gidToBase62(bytes)!;
+    expect(id).toHaveLength(22);
+    // round-trip back to hex
+    let n = 0n;
+    for (const ch of id) n = n * 62n + BigInt("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(ch));
+    expect(n.toString(16).padStart(32, "0")).toBe(hex);
   });
 });
 

@@ -82,6 +82,7 @@ const responseDescriptor = {
     },
     Album: {
       fields: {
+        gid: { type: "bytes", id: 1 },
         name: { type: "string", id: 2 },
         type: { type: "int32", id: 4 },
         date: { type: "Date", id: 6 },
@@ -141,6 +142,21 @@ export interface ExpectedTrackInfo {
   artists?: string;
 }
 
+const BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/** Spotify gid (16 bytes) -> 22-char base62 id. */
+export function gidToBase62(gid: Uint8Array): string | null {
+  if (!gid || gid.length !== 16) return null;
+  let n = 0n;
+  for (const byte of gid) n = (n << 8n) | BigInt(byte);
+  let out = "";
+  for (let i = 0; i < 22; i++) {
+    out = BASE62[Number(n % 62n)] + out;
+    n /= 62n;
+  }
+  return out;
+}
+
 function albumKindFrom(type: number | undefined, typeStr: string | undefined): AlbumKind {
   if (type && ALBUM_TYPES[type]) return ALBUM_TYPES[type];
   const s = (typeStr || "").toLowerCase();
@@ -185,6 +201,7 @@ export function decodeTrackIdentities(
         explicit: typeof t.explicit === "boolean" ? t.explicit : false,
         isrc: isrc ? String(isrc).toUpperCase() : null,
         albumName: t.album?.name || null,
+        albumUri: t.album?.gid && gidToBase62(t.album.gid) ? `spotify:album:${gidToBase62(t.album.gid)}` : null,
         albumKind: albumKindFrom(t.album?.type, t.album?.type_str),
         canonicalUri: t.canonical_uri || null,
         releaseYear: t.album?.date?.year || null,
@@ -220,6 +237,7 @@ export function identityFromGraphQL(
     explicit: track.contentRating?.label ? track.contentRating.label === "EXPLICIT" : null,
     isrc: null,
     albumName: album.name || null,
+    albumUri: typeof album.uri === "string" ? album.uri : null,
     albumKind: albumKindFrom(undefined, album.type),
     canonicalUri: null,
     releaseYear: album.date?.year ?? (yearMatch ? Number(yearMatch[1]) : null),

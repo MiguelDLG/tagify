@@ -51,6 +51,16 @@
   background: rgb(138 43 226 / 30%);
 }
 
+.pillButton.aiButton {
+  color: #d7c2ff;
+  background: rgb(185 140 255 / 12%);
+  border: 1px solid rgb(185 140 255 / 30%);
+}
+
+.pillButton.aiButton:hover {
+  background: rgb(185 140 255 / 28%);
+}
+
 .pillButton.duplicatesButton:hover {
   background: rgb(185 140 255 / 30%);
 }

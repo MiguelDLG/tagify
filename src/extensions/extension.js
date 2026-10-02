@@ -2,6 +2,7 @@
 import { keyboardShortcutService } from "../services/KeyboardShortcutService";
 import { smartPlaylistSyncService } from "../services/SmartPlaylistSyncService";
 import { welcomeModal } from "./WelcomeModal";
+import { openAiPanel, OPEN_AI_EVENT } from "../features/ai";
 import {
   addRecentTag,
   createUpdatedTrack,
@@ -98,6 +99,7 @@ import { getInlineEditScope } from "./inlineEditor.selection";
       playbarEnhancer: false,
       smartPlaylistIndicator: false,
       artistProfileIndicator: false,
+      ai: false,
     },
   };
 
@@ -3999,6 +4001,63 @@ import { getInlineEditScope } from "./inlineEditor.selection";
     },
   };
 
+  const AI_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/>
+    <path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/>
+  </svg>`;
+
+  const aiFeature = {
+    initialize() {
+      if (state.initialized.ai) return;
+      const trackUrisOf = (uris) => uris.filter((uri) => uri.startsWith("spotify:track:"));
+      const kindOf = (uri) =>
+        uri.startsWith("spotify:album:")
+          ? "album"
+          : uri.startsWith("spotify:artist:")
+            ? "artist"
+            : uri.startsWith("spotify:playlist:")
+              ? "playlist"
+              : null;
+
+      try {
+        if (Spicetify.ContextMenu) {
+          new Spicetify.ContextMenu.Item(
+            "Tag with AI",
+            (uris, _uids, contextUri) => {
+              const trackUris = trackUrisOf(uris);
+              if (trackUris.length > 0) {
+                openAiPanel({
+                  kind: trackUris.length > 1 ? "tracks" : "track",
+                  uris: trackUris,
+                  contextUri,
+                });
+                return;
+              }
+              const kind = kindOf(uris[0] || "");
+              if (kind) openAiPanel({ kind, uris: [uris[0]] });
+            },
+            (uris) =>
+              trackUrisOf(uris).length > 0 || (uris.length === 1 && kindOf(uris[0]) !== null),
+            AI_ICON,
+          ).register();
+        }
+
+        if (Spicetify.Topbar?.Button) {
+          new Spicetify.Topbar.Button("Tagify AI", AI_ICON, () =>
+            openAiPanel({ kind: "general", uris: [] }),
+          );
+        }
+
+        window.addEventListener(OPEN_AI_EVENT, (event) => {
+          openAiPanel(event.detail || { kind: "general", uris: [] });
+        });
+        state.initialized.ai = true;
+      } catch (error) {
+        console.error("Tagify: Error initializing AI feature:", error);
+      }
+    },
+  };
+
   // Main initialization
   const initialize = async () => {
     await utils.loadTaggedTracks(); // todo: await does nothing? why ?
@@ -4007,6 +4066,7 @@ import { getInlineEditScope } from "./inlineEditor.selection";
 
     // Initialize features
     contextMenuItem.initialize();
+    aiFeature.initialize();
     tracklistEnhancer.initialize();
     playbarEnhancer.initialize();
     smartPlaylistIndicatorEnhancer.initialize();
